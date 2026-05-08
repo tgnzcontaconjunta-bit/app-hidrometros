@@ -1,203 +1,155 @@
-import ExcelJS from 'exceljs'
-import { saveAs } from 'file-saver'
+// Exportação para XLSX usando ExcelJS com import dinâmico (não bloqueia o carregamento do app)
 
-// Paleta de cores matching o original
 const C = {
-  navyBg: 'FF1F3864',  // cabeçalho instituição (azul escuro)
+  navyBg: 'FF1F3864',
   navyFg: 'FFFFFFFF',
   titleBg: 'FF1F3864',
   titleFg: 'FFFFFFFF',
   dateBg: 'FFDCE6F1',
-  dateFg: 'FF000000',
   configHeaderBg: 'FF002060',
   configHeaderFg: 'FFFFFFFF',
-  configRowBg: 'FFFFFFFF',
   sectionTitleBg: 'FF1F3864',
   sectionTitleFg: 'FFFFFFFF',
   colHeaderBg: 'FF4472C4',
   colHeaderFg: 'FFFFFFFF',
   rowOdd: 'FFDCE6F1',
   rowEven: 'FFFFFFFF',
-  totalBg: 'FFFFFF00',
-  summaryHeaderBg: 'FF4472C4',
-  summaryHeaderFg: 'FFFFFFFF',
   summaryRowBg: 'FFDCE6F1',
   sigBg: 'FFDCE6F1',
   border: 'FF000000',
 }
 
-function applyBorder(ws, row, col, style = 'thin') {
-  const cell = ws.getCell(row, col)
-  cell.border = {
-    top: { style, color: { argb: C.border } },
-    left: { style, color: { argb: C.border } },
-    bottom: { style, color: { argb: C.border } },
-    right: { style, color: { argb: C.border } },
+function cell(ws, row, col, value, bgArgb, fgArgb, bold = false, center = false, wrapText = true) {
+  const c = ws.getCell(row, col)
+  c.value = value ?? ''
+  c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgArgb } }
+  c.font = { name: 'Arial', size: 9, bold, color: { argb: fgArgb } }
+  c.alignment = { vertical: 'middle', horizontal: center ? 'center' : 'left', wrapText }
+  c.border = {
+    top: { style: 'thin', color: { argb: C.border } },
+    left: { style: 'thin', color: { argb: C.border } },
+    bottom: { style: 'thin', color: { argb: C.border } },
+    right: { style: 'thin', color: { argb: C.border } },
   }
+  return c
 }
 
-function fillRow(ws, rowNum, bgArgb, fgArgb, values, bold = false, center = false) {
-  const exRow = ws.getRow(rowNum)
-  values.forEach((v, i) => {
-    const cell = exRow.getCell(i + 1)
-    cell.value = v ?? ''
-    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgArgb } }
-    cell.font = { name: 'Arial', size: 9, bold, color: { argb: fgArgb } }
-    cell.alignment = {
-      vertical: 'middle',
-      horizontal: center ? 'center' : (i === 0 ? 'left' : 'center'),
-      wrapText: true,
-    }
-    cell.border = {
-      top: { style: 'thin', color: { argb: C.border } },
-      left: { style: 'thin', color: { argb: C.border } },
-      bottom: { style: 'thin', color: { argb: C.border } },
-      right: { style: 'thin', color: { argb: C.border } },
-    }
-  })
-  exRow.height = 20
-  exRow.commit()
+function mergeRow(ws, row, c1, c2, value, bg, fg, bold = false, center = true, height = 22) {
+  ws.mergeCells(row, c1, row, c2)
+  cell(ws, row, c1, value, bg, fg, bold, center)
+  ws.getRow(row).height = height
 }
 
-function mergeAndFill(ws, rowNum, startCol, endCol, value, bgArgb, fgArgb, bold = false, center = true, height = 22) {
-  ws.mergeCells(rowNum, startCol, rowNum, endCol)
-  const cell = ws.getCell(rowNum, startCol)
-  cell.value = value
-  cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgArgb } }
-  cell.font = { name: 'Arial', size: 10, bold, color: { argb: fgArgb } }
-  cell.alignment = { vertical: 'middle', horizontal: center ? 'center' : 'left', wrapText: true }
-  cell.border = {
-    top: { style: 'medium', color: { argb: C.border } },
-    left: { style: 'medium', color: { argb: C.border } },
-    bottom: { style: 'medium', color: { argb: C.border } },
-    right: { style: 'medium', color: { argb: C.border } },
-  }
-  ws.getRow(rowNum).height = height
+function dataRow(ws, rowNum, values, bg, bold = false) {
+  const r = ws.getRow(rowNum)
+  values.forEach((v, i) => cell(ws, rowNum, i + 1, v, bg, 'FF000000', bold, i > 0))
+  r.height = 18
+  r.commit()
 }
 
 export async function exportToXlsx(month) {
+  // Carrega ExcelJS e file-saver dinamicamente para não bloquear o app
+  const [{ default: ExcelJS }, { saveAs }] = await Promise.all([
+    import('exceljs'),
+    import('file-saver'),
+  ])
+
   const wb = new ExcelJS.Workbook()
   wb.creator = 'App Hidrometros BNIC'
   wb.created = new Date()
 
-  const ws = wb.addWorksheet(month.label, { pageSetup: { orientation: 'landscape', fitToPage: true } })
+  const ws = wb.addWorksheet(month.label, {
+    pageSetup: { orientation: 'landscape', fitToPage: true },
+  })
 
-  // Largura das colunas: 1=#, 2=consumidor(grande), 3=cod.om, 4=hidrometro, 5=l.atual, 6=l.ant, 7=consumo, 8=dias, 9=total, 10=total pagar
+  const COLS = 10
   ws.columns = [
-    { width: 5 },   // #
-    { width: 38 },  // consumidor
-    { width: 10 },  // código OM
-    { width: 18 },  // hidrômetro
-    { width: 12 },  // leitura atual
-    { width: 12 },  // leitura anterior
-    { width: 12 },  // consumo m³
-    { width: 8 },   // dias
-    { width: 14 },  // consumo total
-    { width: 16 },  // total a pagar
+    { width: 5 },
+    { width: 38 },
+    { width: 10 },
+    { width: 18 },
+    { width: 12 },
+    { width: 12 },
+    { width: 12 },
+    { width: 8 },
+    { width: 14 },
+    { width: 16 },
   ]
 
-  const TOTAL_COLS = 10
-  let rowNum = 1
+  let r = 1
 
-  // ---- CABEÇALHO INSTITUIÇÃO ----
-  mergeAndFill(ws, rowNum, 1, TOTAL_COLS, month.header.institution, C.navyBg, C.navyFg, true, true, 28)
-  rowNum++
+  // Instituição
+  mergeRow(ws, r++, 1, COLS, month.header.institution, C.navyBg, C.navyFg, true, true, 28)
+  // Título
+  mergeRow(ws, r++, 1, COLS, month.header.title, C.titleBg, C.titleFg, true, true, 28)
+  // Datas
+  const dateStr = `DATA LEITURA ANTERIOR: ${month.header.dateAnterior}   |   DATA LEITURA ATUAL: ${month.header.dateAtual}   |   MEDIÇÃO: ${month.header.medicao}   |   VENCIMENTO: ${month.header.vencimento}`
+  mergeRow(ws, r++, 1, COLS, dateStr, C.dateBg, 'FF000000', false, false, 18)
 
-  // ---- TÍTULO ----
-  mergeAndFill(ws, rowNum, 1, TOTAL_COLS, month.header.title, C.titleBg, C.titleFg, true, true, 28)
-  rowNum++
-
-  // ---- LINHA DE DATAS ----
-  const dateStr = `DATA DA LEITURA ANTERIOR  ${month.header.dateAnterior}          DATA DA LEITURA ATUAL  ${month.header.dateAtual}          MEDIÇÃO  ${month.header.medicao}          VENCIMENTO  ${month.header.vencimento}`
-  mergeAndFill(ws, rowNum, 1, TOTAL_COLS, dateStr, C.dateBg, C.dateFg, false, false, 18)
-  rowNum++
-
-  // ---- CONFIGURAÇÕES BASE ----
-  mergeAndFill(ws, rowNum, 1, TOTAL_COLS, 'CONFIGURAÇÕES BASE', C.configHeaderBg, C.configHeaderFg, true, true, 18)
-  rowNum++
-
-  // Headers config
-  const cfgCols = month.baseConfig.columns
-  fillRow(ws, rowNum, C.colHeaderBg, C.colHeaderFg, cfgCols, true, true)
-  rowNum++
-
+  // Configurações Base
+  mergeRow(ws, r++, 1, COLS, 'CONFIGURAÇÕES BASE', C.configHeaderBg, C.configHeaderFg, true, true, 18)
+  const cfgCols = [...month.baseConfig.columns]
+  while (cfgCols.length < COLS) cfgCols.push('')
+  dataRow(ws, r++, cfgCols.slice(0, COLS), C.colHeaderBg, true)
   for (const row of month.baseConfig.rows) {
     const cells = [...(row.cells || [])]
-    while (cells.length < TOTAL_COLS) cells.push('')
-    fillRow(ws, rowNum, C.rowOdd, C.border, cells.slice(0, TOTAL_COLS))
-    rowNum++
+    while (cells.length < COLS) cells.push('')
+    dataRow(ws, r++, cells.slice(0, COLS), C.rowOdd)
   }
+  r++ // espaço
 
-  rowNum++ // espaço
-
-  // ---- SEÇÕES ----
-  let sectionIndex = 0
-  for (const section of month.sections) {
-    // Título da seção
-    mergeAndFill(ws, rowNum, 1, TOTAL_COLS, section.title, C.sectionTitleBg, C.sectionTitleFg, true, true, 20)
-    rowNum++
-
-    // Headers das colunas
-    const cols = ['#', ...section.columns]
-    const headerCells = cols.slice(0, TOTAL_COLS)
-    while (headerCells.length < TOTAL_COLS) headerCells.push('')
-    fillRow(ws, rowNum, C.colHeaderBg, C.colHeaderFg, headerCells, true, true)
-    rowNum++
-
-    // Linhas de dados
-    section.rows.forEach((row, idx) => {
+  // Seções
+  for (const sec of month.sections) {
+    mergeRow(ws, r++, 1, COLS, sec.title, C.sectionTitleBg, C.sectionTitleFg, true, true, 20)
+    const header = ['#', ...sec.columns]
+    while (header.length < COLS) header.push('')
+    dataRow(ws, r++, header.slice(0, COLS), C.colHeaderBg, true)
+    sec.rows.forEach((row, idx) => {
       const cells = [String(idx + 1), ...(row.cells || [])]
-      while (cells.length < TOTAL_COLS) cells.push('')
-      const bg = idx % 2 === 0 ? C.rowEven : C.rowOdd
-      fillRow(ws, rowNum, bg, 'FF000000', cells.slice(0, TOTAL_COLS))
-      rowNum++
+      while (cells.length < COLS) cells.push('')
+      dataRow(ws, r++, cells.slice(0, COLS), idx % 2 === 0 ? C.rowEven : C.rowOdd)
     })
-
-    rowNum++ // espaço entre seções
-    sectionIndex++
+    r++
   }
 
-  // ---- RESUMO ----
-  for (const summary of (month.summaries || [])) {
-    mergeAndFill(ws, rowNum, 1, TOTAL_COLS, summary.title, C.sectionTitleBg, C.sectionTitleFg, true, true, 20)
-    rowNum++
-
-    for (const block of (summary.blocks || [])) {
-      for (const row of (block.rows || [])) {
+  // Resumos
+  for (const sum of (month.summaries || [])) {
+    mergeRow(ws, r++, 1, COLS, sum.title, C.sectionTitleBg, C.sectionTitleFg, true, true, 20)
+    for (const blk of (sum.blocks || [])) {
+      for (const row of (blk.rows || [])) {
         const cells = [...(row.cells || [])]
-        while (cells.length < TOTAL_COLS) cells.push('')
-        fillRow(ws, rowNum, C.summaryRowBg, 'FF000000', cells.slice(0, TOTAL_COLS))
-        rowNum++
+        while (cells.length < COLS) cells.push('')
+        dataRow(ws, r++, cells.slice(0, COLS), C.summaryRowBg)
       }
-      rowNum++
+      r++
     }
   }
 
-  rowNum++
-
-  // ---- OBSERVAÇÕES ----
+  // Observações
   if (month.observations) {
-    mergeAndFill(ws, rowNum, 1, TOTAL_COLS, 'Obs.: ' + month.observations, C.rowOdd, 'FF000000', false, false, 28)
-    rowNum += 2
+    mergeRow(ws, r++, 1, COLS, 'Obs.: ' + month.observations, C.rowOdd, 'FF000000', false, false, 28)
+    r++
   }
 
-  // ---- ASSINATURAS ----
+  // Assinaturas
   const sig = month.signatures
-  mergeAndFill(ws, rowNum, 1, 5, sig.approvedBy.label, C.dateBg, 'FF000000', false, false, 16)
-  mergeAndFill(ws, rowNum, 6, TOTAL_COLS, sig.preparedBy.label, C.dateBg, 'FF000000', false, false, 16)
-  rowNum++
-  mergeAndFill(ws, rowNum, 1, 5, sig.approvedBy.name, C.sigBg, 'FF000000', true, true, 22)
-  mergeAndFill(ws, rowNum, 6, TOTAL_COLS, sig.preparedBy.name, C.sigBg, 'FF000000', true, true, 22)
-  rowNum++
-  mergeAndFill(ws, rowNum, 1, 5, sig.approvedBy.rank, C.sigBg, 'FF000000', false, true, 18)
-  mergeAndFill(ws, rowNum, 6, TOTAL_COLS, sig.preparedBy.rank, C.sigBg, 'FF000000', false, true, 18)
-  rowNum++
-  mergeAndFill(ws, rowNum, 1, 5, sig.approvedBy.role, C.sigBg, 'FF000000', false, true, 22)
-  mergeAndFill(ws, rowNum, 6, TOTAL_COLS, sig.preparedBy.role, C.sigBg, 'FF000000', false, true, 22)
+  const half = Math.floor(COLS / 2)
+  mergeRow(ws, r++, 1, half, sig.approvedBy.label, C.dateBg, 'FF000000', false, false, 16)
+  ws.getCell(r - 1, half + 1).value = sig.preparedBy.label
+  ws.mergeCells(r - 1, half + 1, r - 1, COLS)
+  mergeRow(ws, r++, 1, half, sig.approvedBy.name, C.sigBg, 'FF000000', true, true, 22)
+  ws.mergeCells(r - 1, half + 1, r - 1, COLS)
+  ws.getCell(r - 1, half + 1).value = sig.preparedBy.name
+  mergeRow(ws, r++, 1, half, sig.approvedBy.rank, C.sigBg, 'FF000000', false, true, 18)
+  ws.mergeCells(r - 1, half + 1, r - 1, COLS)
+  ws.getCell(r - 1, half + 1).value = sig.preparedBy.rank
+  mergeRow(ws, r++, 1, half, sig.approvedBy.role, C.sigBg, 'FF000000', false, true, 22)
+  ws.mergeCells(r - 1, half + 1, r - 1, COLS)
+  ws.getCell(r - 1, half + 1).value = sig.preparedBy.role
 
-  // Gera e salva
   const buf = await wb.xlsx.writeBuffer()
-  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-  const filename = `Planilha_Hidrometros_${month.label.replace('/', '_')}.xlsx`
-  saveAs(blob, filename)
+  const blob = new Blob([buf], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  })
+  saveAs(blob, `Planilha_Hidrometros_${month.label.replace('/', '_')}.xlsx`)
 }
