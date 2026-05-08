@@ -1,4 +1,4 @@
-/* ─── reset & base ─────────────────────────────────────────────────────────── */
+/* reset */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -8,15 +8,11 @@ body {
   color: #000;
 }
 
-/* ─── app layout ───────────────────────────────────────────────────────────── */
-.app {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
+/* ── app layout ─────────────────────────────────────────────────────────────── */
+.app { display: flex; flex-direction: column; min-height: 100vh; }
 
-/* ─── tabs bar ─────────────────────────────────────────────────────────────── */
-.tabs-bar {
+/* ── tabs bar ───────────────────────────────────────────────────────────────── */
+.tabs {
   display: flex;
   align-items: stretch;
   background: #1f3864;
@@ -26,23 +22,21 @@ body {
   z-index: 100;
   min-height: 44px;
   flex-wrap: wrap;
-  gap: 0;
 }
 
 .tabs-list {
   display: flex;
   flex: 1;
   align-items: flex-end;
-  padding: 0 8px;
+  padding: 6px 8px 0;
   flex-wrap: wrap;
   gap: 2px;
-  padding-top: 6px;
 }
 
 .tab {
   display: flex;
   align-items: center;
-  padding: 6px 14px 6px 12px;
+  padding: 6px 12px;
   background: #2e4d7b;
   color: #cdd8e8;
   border-radius: 4px 4px 0 0;
@@ -52,24 +46,21 @@ body {
   border: 1px solid #3a5f8a;
   border-bottom: none;
   user-select: none;
-  transition: background 0.15s;
   gap: 6px;
 }
 .tab:hover { background: #3a5f8a; color: #fff; }
-.tab--active { background: #fff; color: #1f3864; border-color: #aac; }
-.tab--active:hover { background: #f0f4fa; }
+.tab.tab-on { background: #fff; color: #1f3864; border-color: #aac; }
+.tab.tab-on:hover { background: #f0f4fa; }
 
-.tab-label { white-space: nowrap; }
-
-.tab-close {
+.tab-x {
   background: none; border: none; cursor: pointer;
   color: inherit; font-size: 14px; line-height: 1;
-  padding: 0 2px; opacity: 0.7;
+  padding: 0 2px; opacity: 0.6;
 }
-.tab-close:hover { opacity: 1; color: #e55; }
-.tab--active .tab-close { color: #1f3864; }
+.tab-x:hover { opacity: 1; color: #e55; }
+.tab.tab-on .tab-x { color: #1f3864; }
 
-.tab-add {
+.tab-new {
   display: flex; align-items: center;
   padding: 5px 12px;
   background: transparent;
@@ -81,18 +72,18 @@ body {
   font-size: 11px;
   font-weight: bold;
   margin-left: 4px;
-  transition: all 0.15s;
+  align-self: flex-end;
 }
-.tab-add:hover { background: #2e4d7b; color: #fff; }
+.tab-new:hover { background: #2e4d7b; color: #fff; }
 
-.toolbar {
+.tools {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
 }
 
-.btn-toolbar {
+.bt {
   padding: 4px 10px;
   background: #2e4d7b;
   color: #cdd8e8;
@@ -101,42 +92,38 @@ body {
   cursor: pointer;
   font-size: 11px;
   white-space: nowrap;
-  transition: background 0.15s;
 }
-.btn-toolbar:hover { background: #3a5f8a; color: #fff; }
+.bt:hover { background: #3a5f8a; color: #fff; }
 
-.btn-export {
+.bt-xl {
   background: #1a6c2e;
   border-color: #2a8a40;
   color: #c8f0d4;
   font-weight: bold;
 }
-.btn-export:hover { background: #218838; }
-.btn-export:disabled { opacity: 0.6; cursor: wait; }
+.bt-xl:hover { background: #218838; }
+.bt-xl:disabled { opacity: 0.6; cursor: wait; }
 
-/* ─── spreadsheet container ─────────────────────────────────────────────────── */
-.spreadsheet-container {
+/* ── page wrapper ───────────────────────────────────────────────────────────── */
+.wrap {
   flex: 1;
   overflow: auto;
   padding: 16px;
 }
 
-.spreadsheet {
+.sheet {
   background: #fff;
   min-width: 900px;
-  max-width: 1200px;
+  max-width: 1300px;
   margin: 0 auto;
   box-shadow: 0 2px 12px rgba(0,0,0,0.15);
   border-radius: 4px;
   overflow: hidden;
-}
-
-/* ─── header section ──────────────────────────────────────────────────────── */
-.sp-header {
   border: 2px solid #1f3864;
 }
 
-.sp-institution {
+/* ── sheet header ───────────────────────────────────────────────────────────── */
+.hdr-i {
   background: #1f3864;
   color: #fff;
   padding: 8px 16px;
@@ -145,8 +132,9 @@ body {
   text-align: center;
   text-transform: uppercase;
 }
+.hdr-i .cel, .hdr-i .inp { color: #fff; font-weight: bold; text-align: center; background: transparent; }
 
-.sp-title {
+.hdr-t {
   background: #1f3864;
   color: #fff;
   padding: 10px 16px;
@@ -154,115 +142,65 @@ body {
   font-size: 14px;
   text-align: center;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  border-top: 1px solid #2e4d7b;
 }
+.hdr-t .cel, .hdr-t .inp { color: #fff; font-weight: bold; text-align: center; background: transparent; }
 
-.sp-dates {
+.hdr-d {
   background: #dce6f1;
   padding: 6px 16px;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
   border-top: 1px solid #aac;
+  border-bottom: 1px solid #aac;
 }
 
-.date-label {
+.dlbl {
   font-weight: bold;
   font-size: 11px;
   color: #1f3864;
   white-space: nowrap;
 }
 
-.date-val {
+.hdr-d .cel {
   background: #fff;
   border: 1px solid #aac;
   border-radius: 2px;
   padding: 2px 6px;
   font-weight: bold;
-  color: #000;
   min-width: 80px;
 }
 
-.date-sep {
-  display: inline-block;
-  width: 1px;
-  height: 16px;
-  background: #aac;
-  margin: 0 4px;
-}
-
-/* ─── sections ─────────────────────────────────────────────────────────────── */
-.sp-section {
-  border-bottom: 2px solid #1f3864;
-}
-
-.sp-section-title {
+/* ── section titles ─────────────────────────────────────────────────────────── */
+.sec-t {
   background: #1f3864;
   color: #fff;
   padding: 6px 12px;
   font-weight: bold;
   font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  border-top: 2px solid #2e6da4;
 }
+.sec-t .cel, .sec-t .inp { color: #fff; font-weight: bold; background: transparent; }
 
-.sp-section-title--sm {
-  font-size: 11px;
-  background: #2e5fa3;
-}
+.sec-cfg { background: #002060; border-color: #002060; }
+.sec-sm  { background: #2e5fa3; border-color: #2e5fa3; font-size: 11px; }
 
-.sp-section-title .edit-cell {
-  color: #fff;
-  font-weight: bold;
-  font-size: 12px;
-}
-
-/* ─── table styles ─────────────────────────────────────────────────────────── */
-.table-wrapper {
-  overflow-x: auto;
-}
-
-.sp-table {
+/* ── tables ─────────────────────────────────────────────────────────────────── */
+.tbl {
   width: 100%;
   border-collapse: collapse;
   font-size: 11px;
 }
-
-.sp-table th,
-.sp-table td {
+.tbl th, .tbl td {
   border: 1px solid #b0bec5;
   padding: 0;
   vertical-align: middle;
 }
 
-.col-header {
-  background: #4472c4;
-  color: #fff;
-  font-weight: bold;
-  font-size: 11px;
-  text-align: center;
-  padding: 4px 2px;
-  white-space: nowrap;
-  position: relative;
-}
-
-.col-header .edit-cell {
-  color: #fff;
-  font-weight: bold;
-  text-align: center;
-  font-size: 10px;
-}
-
-.col-header-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 2px;
-  padding: 2px 4px;
-}
-
-.col-num {
+.th-n {
   background: #4472c4;
   color: #fff;
   font-weight: bold;
@@ -273,94 +211,28 @@ body {
   padding: 4px 2px;
 }
 
-.col-action {
+.th {
+  background: #4472c4;
+  color: #fff;
+  font-weight: bold;
+  font-size: 10px;
+  text-align: center;
+  padding: 4px 4px;
+  white-space: nowrap;
+}
+.th .cel { color: #fff; font-weight: bold; text-align: center; background: transparent; }
+.th .inp { color: #fff; background: rgba(255,255,255,0.2); border-color: #fff; }
+
+.th-act {
+  background: #4472c4;
   width: 28px;
   min-width: 28px;
   text-align: center;
-  background: #f0f4fa;
-  border-left: 1px dashed #aac !important;
   padding: 2px;
 }
 
-/* row colors */
-.row-even { background: #fff; }
-.row-odd  { background: #dce6f1; }
-
-.row-even:hover,
-.row-odd:hover { background: #e8f0fd; }
-
-/* special column styles */
-.td-leitura-atual  { background: inherit; }
-.td-leitura-anterior { background: inherit; }
-.td-total { font-weight: bold; text-align: right; }
-.td-consumidor { max-width: 280px; }
-
-/* ─── editable cells ────────────────────────────────────────────────────────── */
-.edit-cell {
-  display: block;
-  min-height: 20px;
-  padding: 3px 5px;
-  cursor: text;
-  word-break: break-word;
-  line-height: 1.3;
-}
-
-.edit-cell:hover {
-  background: rgba(66, 114, 196, 0.1);
-  outline: 1px dashed #4472c4;
-  border-radius: 2px;
-}
-
-.edit-input {
-  display: block;
-  width: 100%;
-  min-height: 24px;
-  padding: 3px 5px;
-  border: 2px solid #4472c4;
-  border-radius: 2px;
-  background: #fff;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 11px;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(66,114,196,0.2);
-  resize: none;
-}
-
-.placeholder { color: #aaa; font-style: italic; }
-
-/* ─── action buttons ────────────────────────────────────────────────────────── */
-.btn-del-row,
-.btn-del-col {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #c33;
-  font-size: 14px;
-  line-height: 1;
-  padding: 2px;
-  opacity: 0.5;
-  border-radius: 3px;
-  transition: opacity 0.15s, background 0.15s;
-}
-.btn-del-row:hover,
-.btn-del-col:hover { opacity: 1; background: #fdd; }
-
-.btn-add-row {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 10px;
-  background: none;
-  border: 1px dashed #4472c4;
-  border-radius: 3px;
-  color: #4472c4;
-  cursor: pointer;
-  font-size: 11px;
-  margin: 4px 6px;
-  transition: background 0.15s;
-}
-.btn-add-row:hover { background: #e8f0fd; }
-
-.btn-add-col {
+/* add-column button */
+.b\+ {
   background: rgba(255,255,255,0.3);
   border: 1px dashed #fff;
   border-radius: 3px;
@@ -372,88 +244,152 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s;
+  line-height: 1;
 }
-.btn-add-col:hover { background: rgba(255,255,255,0.5); }
+.b\+:hover { background: rgba(255,255,255,0.5); }
 
-.add-row-tr td { border: none; padding: 2px; background: #f8faff; }
-
-/* ─── config table ─────────────────────────────────────────────────────────── */
-.config-table {
-  font-size: 11px;
+/* delete button (header col or row) */
+.bx {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #faa;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+  opacity: 0.6;
+  border-radius: 3px;
 }
+.bx:hover { opacity: 1; color: #f55; background: rgba(255,0,0,0.15); }
 
-.config-table thead th {
-  background: #002060;
-  color: #fff;
+/* row cells */
+.td-n {
+  background: #f0f4fa;
+  color: #666;
+  text-align: center;
   font-size: 10px;
-  padding: 4px 6px;
+  width: 28px;
+  min-width: 28px;
+  padding: 2px;
+}
+.td-w { min-width: 180px; max-width: 320px; }
+.td   { min-width: 60px; }
+.td-act {
+  width: 28px;
+  min-width: 28px;
+  text-align: center;
+  background: #f8faff;
+  border-left: 1px dashed #aac !important;
+  padding: 2px;
+}
+.td-act .bx { color: #c33; }
+.td-act .bx:hover { color: #a00; background: #fdd; }
+
+.td-add { border: none !important; background: #f8faff; padding: 2px; }
+
+/* row alternating colors */
+.r0 { background: #fff; }
+.r1 { background: #dce6f1; }
+.r0:hover, .r1:hover { background: #e8f0fd; }
+
+/* ── editable cell / input ──────────────────────────────────────────────────── */
+.cel {
+  display: block;
+  min-height: 20px;
+  padding: 3px 5px;
+  cursor: text;
+  word-break: break-word;
+  line-height: 1.3;
+}
+.cel:hover {
+  background: rgba(66,114,196,0.12);
+  outline: 1px dashed #4472c4;
+  border-radius: 2px;
 }
 
-/* ─── summary section ──────────────────────────────────────────────────────── */
-.summary-block {
-  padding: 6px 0;
+.inp {
+  display: block;
+  width: 100%;
+  min-height: 24px;
+  padding: 3px 5px;
+  border: 2px solid #4472c4;
+  border-radius: 2px;
+  background: #fff;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(66,114,196,0.2);
 }
 
-.summary-table { font-size: 11px; }
-.summary-header-row .summary-th {
+/* add-row button */
+.b-add {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  background: none;
+  border: 1px dashed #4472c4;
+  border-radius: 3px;
+  color: #4472c4;
+  cursor: pointer;
+  font-size: 11px;
+  margin: 4px 6px;
+}
+.b-add:hover { background: #e8f0fd; }
+
+/* ── summary tables ─────────────────────────────────────────────────────────── */
+.sum-tbl { width: auto; margin: 4px 12px 8px; border-collapse: collapse; font-size: 11px; }
+.sum-tbl td { border: 1px solid #b0bec5; padding: 0; }
+
+.sum-h {}
+.sum-d {}
+
+.sum-th {
   background: #4472c4;
   color: #fff;
   font-weight: bold;
   padding: 4px 8px;
   text-align: center;
 }
-.summary-data-row .summary-td {
+.sum-th .cel { color: #fff; background: transparent; font-weight: bold; }
+
+.sum-td {
   background: #dce6f1;
   padding: 3px 8px;
   text-align: center;
   font-weight: bold;
+  min-width: 100px;
 }
 
-/* ─── observations ─────────────────────────────────────────────────────────── */
-.sp-obs {
+/* ── observations ───────────────────────────────────────────────────────────── */
+.obs-row {
   display: flex;
   align-items: flex-start;
   gap: 8px;
   padding: 10px 14px;
   background: #f8faff;
-  border-bottom: 2px solid #1f3864;
+  border-top: 2px solid #1f3864;
 }
 
-.obs-label {
-  font-weight: bold;
-  white-space: nowrap;
-  color: #1f3864;
-  padding-top: 3px;
-}
-
-.obs-text {
-  flex: 1;
-  min-height: 30px;
-  font-style: italic;
-}
-
-/* ─── signatures ──────────────────────────────────────────────────────────── */
-.sp-signatures {
+/* ── signatures ─────────────────────────────────────────────────────────────── */
+.sig-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   border-top: 2px solid #1f3864;
 }
 
-.sig-block {
+.sig-col {
   padding: 12px 16px;
   border-right: 1px solid #aac;
   background: #f0f4fa;
 }
-.sig-block:last-child { border-right: none; }
+.sig-col:last-child { border-right: none; }
 
-.sig-label { font-size: 10px; color: #555; margin-bottom: 4px; }
-.sig-name .edit-cell { font-weight: bold; font-size: 12px; text-align: center; }
-.sig-rank .edit-cell { font-size: 11px; text-align: center; color: #1f3864; }
-.sig-role .edit-cell { font-size: 10px; text-align: center; color: #333; }
+.sig-lbl { font-size: 10px; color: #555; margin-bottom: 4px; }
+.sig-nome .cel { font-weight: bold; font-size: 12px; text-align: center; }
+.sig-cargo .cel { font-size: 11px; text-align: center; color: #1f3864; }
 
-/* ─── modals ──────────────────────────────────────────────────────────────── */
-.modal-overlay {
+/* ── modals ─────────────────────────────────────────────────────────────────── */
+.ov {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.5);
@@ -463,7 +399,7 @@ body {
   justify-content: center;
 }
 
-.modal {
+.mod {
   background: #fff;
   border-radius: 8px;
   padding: 28px;
@@ -471,46 +407,23 @@ body {
   max-width: 480px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.25);
 }
+.mod h3 { font-size: 16px; color: #1f3864; margin-bottom: 12px; }
+.mod p { font-size: 12px; color: #444; margin-bottom: 14px; line-height: 1.5; }
+.mod label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: #333; margin-bottom: 16px; }
 
-.modal h3 {
-  font-size: 16px;
-  color: #1f3864;
-  margin-bottom: 12px;
-}
-
-.modal p {
-  font-size: 12px;
-  color: #444;
-  margin-bottom: 14px;
-  line-height: 1.5;
-}
-
-.modal label {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 12px;
-  color: #333;
-  margin-bottom: 16px;
-}
-
-.modal-input {
+.mod-inp {
   padding: 7px 10px;
   border: 1px solid #aac;
   border-radius: 4px;
   font-size: 13px;
   outline: none;
+  width: 100%;
 }
-.modal-input:focus { border-color: #4472c4; box-shadow: 0 0 0 2px rgba(66,114,196,0.2); }
+.mod-inp:focus { border-color: #4472c4; box-shadow: 0 0 0 2px rgba(66,114,196,0.2); }
 
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 8px;
-}
+.mod-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
 
-.btn-modal-cancel {
+.b-can {
   padding: 7px 16px;
   background: #f0f0f0;
   border: 1px solid #ccc;
@@ -518,9 +431,9 @@ body {
   cursor: pointer;
   font-size: 12px;
 }
-.btn-modal-cancel:hover { background: #e0e0e0; }
+.b-can:hover { background: #e0e0e0; }
 
-.btn-modal-confirm {
+.b-ok {
   padding: 7px 18px;
   background: #1f3864;
   color: #fff;
@@ -530,9 +443,9 @@ body {
   font-size: 12px;
   font-weight: bold;
 }
-.btn-modal-confirm:hover { background: #2e5fa3; }
+.b-ok:hover { background: #2e5fa3; }
 
-.btn-modal-delete {
+.b-del {
   padding: 7px 18px;
   background: #c33;
   color: #fff;
@@ -542,17 +455,17 @@ body {
   font-size: 12px;
   font-weight: bold;
 }
-.btn-modal-delete:hover { background: #a22; }
+.b-del:hover { background: #a22; }
 
-/* ─── scrollbar ────────────────────────────────────────────────────────────── */
+/* ── scrollbar ──────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: #e8ecf0; }
 ::-webkit-scrollbar-thumb { background: #4472c4; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #1f3864; }
 
-/* ─── responsive ───────────────────────────────────────────────────────────── */
+/* ── responsive ─────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .spreadsheet { min-width: unset; }
-  .sp-signatures { grid-template-columns: 1fr; }
-  .toolbar { flex-wrap: wrap; }
+  .sheet { min-width: unset; }
+  .sig-row { grid-template-columns: 1fr; }
+  .tools { flex-wrap: wrap; }
 }

@@ -4,9 +4,32 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Planilha de Hidrometros – BNIC</title>
+    <script>
+      // Captura erros JS e exibe na tela (antes do React montar)
+      window.onerror = function(msg, src, line, col, err) {
+        var d = document.getElementById('js-error')
+        if (d) {
+          d.style.display = 'block'
+          d.innerHTML = '<b>Erro JavaScript:</b><br>' + msg + '<br>Arquivo: ' + src + ' linha ' + line +
+            '<br><pre style="white-space:pre-wrap;font-size:11px">' + (err && err.stack ? err.stack : '') + '</pre>'
+        }
+      }
+      window.onunhandledrejection = function(e) {
+        var d = document.getElementById('js-error')
+        if (d) {
+          d.style.display = 'block'
+          d.innerHTML += '<b>Promise rejeitada:</b><br>' + (e.reason && e.reason.stack ? e.reason.stack : e.reason)
+        }
+      }
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="js-error" style="display:none;padding:20px;background:#fff0f0;color:#c00;font-family:monospace;font-size:13px;border:2px solid #c00;margin:10px;border-radius:6px"></div>
+    <div id="root">
+      <div style="padding:32px;font-family:Arial,sans-serif;font-size:14px;color:#1f3864">
+        Carregando aplicação...
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
